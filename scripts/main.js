@@ -1,22 +1,37 @@
+/*  Custom enumerated type to keep track of whether
+	the last button pressed was an operation button,
+	number/number modification, equal sign, or other. 
+*/
 const buttonEnums = {
 	OPERATION: '+, -, *, /', 
 	EQUAL: '=', 
-	NUM: '0,...,9', 
-	OTHER: '., +/-, %, C'
+	NUM: '0,1,2,3,4,5,6,7,8,9,.,+/-,%', 
+	OTHER: 'C'
 }
 
+/*  Object keeps track of last two numbers that were operated 
+	on, the last operation, and the type of button that was last
+	pressed.
+*/
 let calcHistory = new CalculatorClass("", "", "", buttonEnums.OTHER);
-
 let buttons = document.querySelectorAll("button");
 
+// Every time a button is clicked on calculator, we update all our parameters
 for(let i = 0; i < buttons.length; i++){
 	buttons[i].addEventListener('click', pressButton);
 }
 
+/*  Update paramters of calcHistory object at the click of each button 
+	so we can keep track of what changes need to be made. Every time a 
+	button is clicked the state of our object is effectively updated.
+*/
 function pressButton(e) {
 	let buttonTxt = e.target.innerHTML;
 	let displayText = document.querySelector("#display");
 	let displayNum = Number(displayText.textContent);
+	// Operation buttons trigger evaluations of calculations or 
+	// simply the recording of the operation to be evaluated once
+	// we get the next operand
 	if(buttonTxt === "+" || buttonTxt === "-" || 
 		buttonTxt === "*" || buttonTxt === "/") {
 
@@ -46,6 +61,7 @@ function pressButton(e) {
 			calcHistory.newLastPressed(buttonEnums.OPERATION);
 		}
 	}
+	// Clear all parameters when C is pressed
 	else if (buttonTxt === "C") {
 		calcHistory.newFirstO("");
 		calcHistory.newSecondO("");
@@ -53,6 +69,9 @@ function pressButton(e) {
 		displayText.textContent = "0";
 		calcHistory.newLastPressed(buttonEnums.OTHER); 
 	}
+	// Evaluate calculation that has been stored in our object.
+	// If we press equal after an operation, we must perform the 
+	// operation on the currently displayed number.
 	else if (buttonTxt === "=") {
 		if (calcHistory.getLastPressed() === buttonEnums.NUM ||
 			calcHistory.getLastPressed() === buttonEnums.EQUAL) {
@@ -109,6 +128,7 @@ function pressButton(e) {
 			calcHistory.newLastPressed(buttonEnums.NUM);
 		}
 	}
+	// Update numerical display according to what was pressed just before.
 	else { //numbers 0-9
 		if (calcHistory.getLastPressed() === buttonEnums.OPERATION || 
 			calcHistory.getLastPressed() === buttonEnums.OTHER || displayNum === 0) {
@@ -128,6 +148,7 @@ function pressButton(e) {
 	}
 }
 
+// Given operation and two operands, perform the calculation
 function performArithmetic(buttonTxt, A, B) {
 	switch(buttonTxt) {
 		case "+":
@@ -141,6 +162,13 @@ function performArithmetic(buttonTxt, A, B) {
 	}
 }
 
+/*  This object records all the state parameters needed to carry out the 
+	tasks of the calculator. firstOperand and secondOperand are the last 
+	two operands that were operated on, so if we press the buttons 2, +,
+	3, and = in that order, 2 and 3 are our operands and + is the operation 
+	stored. Also keep track of the type of the last button pressed, since this
+	tends to effect the calculation the calculator will perform at any given stage.
+*/
 function CalculatorClass(firstOperand, secondOperand, lastOperation, lastPressed) {
 	this.firstOperand = firstOperand;
 	this.secondOperand = secondOperand;
@@ -148,21 +176,13 @@ function CalculatorClass(firstOperand, secondOperand, lastOperation, lastPressed
 	this.lastPressed = lastPressed;
 }
 	
-
+// CalculatorClass methods
 CalculatorClass.prototype.newFirstO = function(myNewOperand) {
 	this.firstOperand = myNewOperand;
 }
 
-CalculatorClass.prototype.removeFirstO = function(myNewOperand) {
-	this.firstOperand = "";
-}
-
 CalculatorClass.prototype.newSecondO = function(myNewOperand) {
 	this.secondOperand = myNewOperand;
-}
-
-CalculatorClass.prototype.removeSecondO = function(myNewOperand) {
-	this.secondOperand = "";
 }
 
 CalculatorClass.prototype.newOperation = function(myNewOperation) {
