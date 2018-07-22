@@ -29,6 +29,9 @@ function pressButton(e) {
 	let buttonTxt = e.target.innerHTML;
 	let displayText = document.querySelector("#display");
 	let displayNum = Number(displayText.textContent);
+
+	adjustFontSize(displayText)	;
+
 	// Operation buttons trigger evaluations of calculations or 
 	// simply the recording of the operation to be evaluated once
 	// we get the next operand
@@ -67,6 +70,7 @@ function pressButton(e) {
 		calcHistory.newSecondO("");
 		calcHistory.newOperation("");
 		displayText.textContent = "0";
+		resetTextSize(displayText);
 		calcHistory.newLastPressed(buttonEnums.OTHER); 
 	}
 	// Evaluate calculation that has been stored in our object.
@@ -135,7 +139,7 @@ function pressButton(e) {
 			displayText.textContent = buttonTxt;
 			calcHistory.newLastPressed(buttonEnums.NUM);
 		}		
-		else if (calcHistory.getLastPressed() === buttonEnums.NUM) {
+		else if (calcHistory.getLastPressed() === buttonEnums.NUM) {			
 			displayText.textContent += buttonTxt;
 			calcHistory.newLastPressed(buttonEnums.NUM);
 		}	
@@ -160,6 +164,20 @@ function performArithmetic(buttonTxt, A, B) {
 		case "/":
 			return Number(A) / Number(B);
 	}
+}
+
+// Decrease font size of display numbers if digits overflow
+function adjustFontSize(displayText) {
+	if (displayText.scrollWidth !== displayText.clientWidth) {
+		let fontsz = window.getComputedStyle(displayText).fontSize;
+		fontsz = fontsz.slice(0,fontsz.length - 2);
+		displayText.style.cssText = "font-size: " + (Number(fontsz) - 10).toString() + "px;";
+	}
+}
+
+// Reset display text to 52px if text got resized from number overflow
+function resetTextSize(displayText) {
+	displayText.style.cssText = "font-size: 52px";
 }
 
 /*  This object records all the state parameters needed to carry out the 

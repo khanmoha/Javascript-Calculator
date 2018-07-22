@@ -32,8 +32,14 @@ p {
 	opacity: 0.4
 }
 
+.display-div {
+	position: relative;
+}
+
 #display {
+	overflow: hidden;
 	text-align: right;
+	min-height: 60px;
 	width: 280px;
 	margin: auto;
 	display: block;
