@@ -2,23 +2,22 @@
 	the last button pressed was an operation button,
 	number/number modification, equal sign, or other. 
 */
-const buttonEnums = {
+const buttons = {
 	OPERATION: '+, -, *, /', 
 	EQUAL: '=', 
 	NUM: '0,1,2,3,4,5,6,7,8,9,.,+/-,%', 
-	OTHER: 'C'
 }
 
 // Object keeps track of last two numbers that were operated 
 // on, the last operation, and the type of button that was last
 // pressed.
 
-let calcHistory = new CalculatorClass("0", "", "", buttonEnums.OTHER);
-let buttons = document.querySelectorAll("button");
+let history = new CalculatorHistory("", "", "");
+let allButtons = document.querySelectorAll("button");
 
 // Every time a button is clicked on calculator, we update all our parameters
-for(let i = 0; i < buttons.length; i++){
-	buttons[i].addEventListener('click', pressButton);
+for(let i = 0; i < allButtons.length; i++){
+	allButtons[i].addEventListener('click', pressButton);
 }
 
 // Evert time a keypress event is triggered, run calculator logic for that key.
@@ -41,7 +40,7 @@ function pressButton(e) {
 	runCalculator(buttonTxt);
 }
 
-// Update paramters of calcHistory object at the click of each button 
+// Update paramters of history object at the click of each button 
 // so we can keep track of what changes need to be made. Every time a 
 // button is clicked the state of our object is effectively updated
 function runCalculator(buttonTxt) {
@@ -53,130 +52,65 @@ function runCalculator(buttonTxt) {
 	// Operation buttons trigger evaluations of calculations or 
 	// simply the recording of the operation to be evaluated once
 	// we get the next operand
-	if(buttonTxt === "+" || buttonTxt === "-" || 
-		buttonTxt === "*" || buttonTxt === "/") {
-		if (calcHistory.getFirstO() === "0") { 
-			if (displayNum !== 0) {
-				calcHistory.newFirstO(displayNum);
-			}
-			calcHistory.newOperation(buttonTxt);
-			calcHistory.newLastPressed(buttonEnums.OPERATION);
+	if(buttonTxt === "+" || buttonTxt === "-" || buttonTxt === "*" || buttonTxt === "/") {
+		if (!history.getOperand() || history.getLastPressed() === buttons.EQUAL) {
+			history.newOperand(displayNum);
 		}
-		else if (calcHistory.getSecondO() === "" && 
-			calcHistory.getLastPressed() !== buttonEnums.OPERATION) {
-			calcHistory.newSecondO(displayNum);
-			if (calcHistory.getOperation() === "") {
-				calcHistory.newOperation(buttonTxt);
-			}
-			let result = performArithmetic(calcHistory.getOperation(), 
-				calcHistory.getFirstO(), calcHistory.getSecondO());
+		else if (history.getLastPressed() === buttons.NUM) {
+			let result = performArithmetic(history.getOperation(), history.getOperand(), displayNum);
 			displayText.textContent = result.toString();
-			calcHistory.newFirstO(result);
-			calcHistory.newSecondO("");
-			calcHistory.newOperation(buttonTxt);
-			calcHistory.newLastPressed(buttonEnums.OPERATION);
-			
+			history.newOperand(result);
 		}
-		else if (calcHistory.getLastPressed() === buttonEnums.EQUAL) {
-			calcHistory.newSecondO("");
-			calcHistory.newOperation(buttonTxt);
-			calcHistory.newLastPressed(buttonEnums.OPERATION);
-		}
-		else {
-			calcHistory.newOperation(buttonTxt);
-			calcHistory.newLastPressed(buttonEnums.OPERATION);
-		}
+		history.newOperation(buttonTxt);
+		history.newLastPressed(buttons.OPERATION);
 	}
 	// Clear all parameters when C is pressed
 	else if (buttonTxt === "C") {
-		calcHistory.newFirstO("");
-		calcHistory.newSecondO("");
-		calcHistory.newOperation("");
+		history.newOperand("");
+		history.newOperation("");
+		history.newLastPressed(""); 
 		displayText.textContent = "0";
 		resetTextSize(displayText);
-		calcHistory.newLastPressed(buttonEnums.OTHER); 
 	}
-	// Evaluate calculation that has been stored in our object.
-	// If we press equal after an operation, we must perform the 
-	// operation on the currently displayed number.
 	else if (buttonTxt === "=") {
-
-		if ((calcHistory.getLastPressed() === buttonEnums.NUM ||
-			calcHistory.getLastPressed() === buttonEnums.EQUAL) &&
-			calcHistory.getFirstO()) {
-
-			if (calcHistory.getSecondO() === "") {
-				calcHistory.newSecondO(displayNum);
-			}
-			let result = performArithmetic(calcHistory.getOperation(),
-				calcHistory.getFirstO(), calcHistory.getSecondO());
+		if (history.getLastPressed() === buttons.NUM && history.getOperand() !== "") {
+			let result = performArithmetic(history.getOperation(), history.getOperand(), displayNum);
+			history.newOperand(displayNum);
 			displayText.textContent = result.toString();
-			calcHistory.newFirstO(result);
-			calcHistory.newLastPressed(buttonEnums.EQUAL);
 		}
-		else if (calcHistory.getLastPressed() === buttonEnums.OPERATION) {
-			if (calcHistory.getSecondO() === "") {
-				let result = performArithmetic(calcHistory.getOperation(), 
-					calcHistory.getFirstO(), calcHistory.getFirstO());
-				displayText.textContent = result.toString();
-				calcHistory.newSecondO(calcHistory.getFirstO());
-				calcHistory.newFirstO(result);
-				calcHistory.newLastPressed(buttonEnums.EQUAL);
-			}
-			else {
-				let result = performArithmetic(calcHistory.getOperation(), 
-					calcHistory.getFirstO(), calcHistory.getSecondO());
-				displayText.textContent = result.toString();
-				calcHistory.newFirstO(result);
-				calcHistory.newLastPressed(buttonEnums.EQUAL);
-			}
+		else if (history.getLastPressed() === buttons.EQUAL || history.getLastPressed() === buttons.OPERATION) {
+			let result = performArithmetic(history.getOperation(), displayNum, history.getOperand());
+			displayText.textContent = result.toString();
 		}
-		
+		history.newLastPressed(buttons.EQUAL);
 	}
 	else if (buttonTxt === ".") {
 		if (displayText.textContent.indexOf(".") === -1) {
 			displayText.textContent += ".";
-			calcHistory.newLastPressed(buttonEnums.NUM);
+			history.newLastPressed(buttons.NUM);
 		}
 	}
 	else if (buttonTxt === "+/-") {
-		if (displayText.textContent === "0") {
-			return;
-		}
-		if (displayText.textContent[0] === "-") {
-			displayText.textContent = displayText.textContent.slice(1);
-		}
-		else {
-			displayText.textContent = "-" + displayText.textContent;
-		}
-		calcHistory.newLastPressed(buttonEnums.NUM);
+		displayText.textContent = (displayNum * -1).toString();
+		history.newLastPressed(buttons.NUM);
 	}
 	else if (buttonTxt === "%") {
-		if (calcHistory.getFirstO() && calcHistory.getOperation()) {
-			let percentage = Number(displayNum) * 
-			0.01 * calcHistory.getFirstO();
+		if (history.getOperand() && history.getOperation()) {
+			let percentage = displayNum * 0.01 * history.getOperand();
 			displayText.textContent = percentage.toString();
-			calcHistory.newSecondO(percentage);
-			calcHistory.newLastPressed(buttonEnums.NUM);
+			history.newLastPressed(buttons.NUM);
 		}
 	}
 	// Update numerical display according to what was pressed just before.
 	else { //numbers 0-9
-		if (calcHistory.getLastPressed() === buttonEnums.OPERATION || 
-			calcHistory.getLastPressed() === buttonEnums.OTHER || displayText.textContent === "0") {
-			displayText.textContent = buttonTxt;
-			calcHistory.newLastPressed(buttonEnums.NUM);
-		}		
-		else if (calcHistory.getLastPressed() === buttonEnums.NUM) {			
+		if (history.getLastPressed() === buttons.NUM) {
 			displayText.textContent += buttonTxt;
-			calcHistory.newLastPressed(buttonEnums.NUM);
-		}	
-		else if (calcHistory.getLastPressed() === buttonEnums.EQUAL) {
-			displayText.textContent = buttonTxt;
-			calcHistory.newFirstO("");
-			calcHistory.newSecondO("");
-			calcHistory.newLastPressed(buttonEnums.NUM);
 		}
+		else if (history.getLastPressed() === buttons.EQUAL || 
+			history.getLastPressed() === buttons.OPERATION || displayNum === 0) {
+			displayText.textContent = buttonTxt;
+		}
+		history.newLastPressed(buttons.NUM);
 	}
 }
 
@@ -242,6 +176,7 @@ function calcThruKeypress(e) {
 
 // Given operation and two operands, perform the calculation
 function performArithmetic(buttonTxt, A, B) {
+	
 	switch(buttonTxt) {
 		case "+":
 			return Number(A) + Number(B);
@@ -274,42 +209,33 @@ function resetTextSize(displayText) {
 // 3, and = in that order, 2 and 3 are our operands and + is the operation 
 // stored. Also keep track of the type of the last button pressed, since this
 // tends to effect the calculation the calculator will perform at any given stage.
-function CalculatorClass(firstOperand, secondOperand, lastOperation, lastPressed) {
-	this.firstOperand = firstOperand;
-	this.secondOperand = secondOperand;
+function CalculatorHistory(savedOperand, lastOperation, lastPressed) {
+	this.savedOperand = savedOperand;
 	this.lastOperation = lastOperation;
 	this.lastPressed = lastPressed;
 }
-	
-// CalculatorClass methods
-CalculatorClass.prototype.newFirstO = function(myNewOperand) {
-	this.firstOperand = myNewOperand;
+
+// CalculatorHistory methods
+CalculatorHistory.prototype.newOperand = function(myNewOperand) {
+	this.savedOperand = myNewOperand;
 }
 
-CalculatorClass.prototype.newSecondO = function(myNewOperand) {
-	this.secondOperand = myNewOperand;
-}
-
-CalculatorClass.prototype.newOperation = function(myNewOperation) {
+CalculatorHistory.prototype.newOperation = function(myNewOperation) {
 	this.lastOperation = myNewOperation;
 }
 
-CalculatorClass.prototype.newLastPressed = function(newPressed) {
+CalculatorHistory.prototype.newLastPressed = function(newPressed) {
 	this.lastPressed = newPressed;
 }
 
-CalculatorClass.prototype.getFirstO = function() {
-	return this.firstOperand;
+CalculatorHistory.prototype.getOperand = function() {
+	return this.savedOperand;
 }
 
-CalculatorClass.prototype.getSecondO = function() {
-	return this.secondOperand;
-}
-
-CalculatorClass.prototype.getOperation = function() {
+CalculatorHistory.prototype.getOperation = function() {
 	return this.lastOperation;
 }
 
-CalculatorClass.prototype.getLastPressed = function() {
+CalculatorHistory.prototype.getLastPressed = function() {
 	return this.lastPressed;
 }

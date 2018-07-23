@@ -142,3 +142,10 @@
 	document.querySelector("#btnDec").click();
 	document.querySelector("#btn3").click();
 	console.assert(document.querySelector("#display").textContent === "7.3");
+
+// Test (0) - a =
+	document.querySelector("#btnC").click();
+	document.querySelector("#btnSub").click();
+	document.querySelector("#btn5").click();
+	document.querySelector("#btnEq").click();
+	console.assert(document.querySelector("#display").textContent === "-5");
