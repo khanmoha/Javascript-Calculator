@@ -9,10 +9,10 @@ const buttonEnums = {
 	OTHER: 'C'
 }
 
-/*  Object keeps track of last two numbers that were operated 
-	on, the last operation, and the type of button that was last
-	pressed.
-*/
+// Object keeps track of last two numbers that were operated 
+// on, the last operation, and the type of button that was last
+// pressed.
+
 let calcHistory = new CalculatorClass("", "", "", buttonEnums.OTHER);
 let buttons = document.querySelectorAll("button");
 
@@ -21,12 +21,29 @@ for(let i = 0; i < buttons.length; i++){
 	buttons[i].addEventListener('click', pressButton);
 }
 
-/*  Update paramters of calcHistory object at the click of each button 
-	so we can keep track of what changes need to be made. Every time a 
-	button is clicked the state of our object is effectively updated.
-*/
+// Evert time a keypress event is triggered, run calculator logic for that key
+// Keypress only fires when a character is pressed.
+document.addEventListener('keypress', calcThruKeypress);
+
+// Keypress doesn't detect backspace.
+document.addEventListener('keydown', (e) => {
+	//console.log("keydown"+e.keyCode);
+	if (e.keyCode === 8) {
+		runCalculator("C");
+	}
+});
+
+// Run calculator logic when a button is clicked on
 function pressButton(e) {
 	let buttonTxt = e.target.innerHTML;
+	runCalculator(buttonTxt);
+}
+
+// Update paramters of calcHistory object at the click of each button 
+// so we can keep track of what changes need to be made. Every time a 
+// button is clicked the state of our object is effectively updated
+function runCalculator(buttonTxt) {
+	//let buttonTxt = e.target.innerHTML;
 	let displayText = document.querySelector("#display");
 	let displayNum = Number(displayText.textContent);
 
@@ -43,7 +60,8 @@ function pressButton(e) {
 			calcHistory.newOperation(buttonTxt);
 			calcHistory.newLastPressed(buttonEnums.OPERATION);
 		}
-		else if (calcHistory.getSecondO() === "") {
+		else if (calcHistory.getSecondO() === "" && 
+			calcHistory.getLastPressed() !== buttonEnums.OPERATION) {
 			calcHistory.newSecondO(displayNum);
 			let result = performArithmetic(calcHistory.getOperation(), 
 				calcHistory.getFirstO(), calcHistory.getSecondO());
@@ -77,8 +95,9 @@ function pressButton(e) {
 	// If we press equal after an operation, we must perform the 
 	// operation on the currently displayed number.
 	else if (buttonTxt === "=") {
-		if (calcHistory.getLastPressed() === buttonEnums.NUM ||
-			calcHistory.getLastPressed() === buttonEnums.EQUAL) {
+		if ((calcHistory.getLastPressed() === buttonEnums.NUM ||
+			calcHistory.getLastPressed() === buttonEnums.EQUAL) &&
+			calcHistory.getFirstO()) {
 			if (calcHistory.getSecondO() === "") {
 				calcHistory.newSecondO(displayNum);
 			}
@@ -108,8 +127,10 @@ function pressButton(e) {
 		
 	}
 	else if (buttonTxt === ".") {
-		displayText.textContent += ".";
-		calcHistory.newLastPressed(buttonEnums.NUM);
+		if (displayText.textContent.indexOf(".") === -1) {
+			displayText.textContent += ".";
+			calcHistory.newLastPressed(buttonEnums.NUM);
+		}
 	}
 	else if (buttonTxt === "+/-") {
 		if (displayText.textContent === "0") {
@@ -135,7 +156,7 @@ function pressButton(e) {
 	// Update numerical display according to what was pressed just before.
 	else { //numbers 0-9
 		if (calcHistory.getLastPressed() === buttonEnums.OPERATION || 
-			calcHistory.getLastPressed() === buttonEnums.OTHER || displayNum === 0) {
+			calcHistory.getLastPressed() === buttonEnums.OTHER || displayText.textContent === "0") {
 			displayText.textContent = buttonTxt;
 			calcHistory.newLastPressed(buttonEnums.NUM);
 		}		
@@ -149,6 +170,70 @@ function pressButton(e) {
 			calcHistory.newSecondO("");
 			calcHistory.newLastPressed(buttonEnums.NUM);
 		}
+	}
+}
+
+// Use keypress input to carry out calculator logic.
+function calcThruKeypress(e) {
+	console.log("keypress"+e.keyCode);
+	switch(e.keyCode) {
+		case 48:
+			runCalculator("0");
+			break;
+		case 49:
+			runCalculator("1");
+			break;
+		case 50:
+			runCalculator("2");
+			break;
+		case 51:
+			runCalculator("3");
+			break;
+		case 52:
+			runCalculator("4");
+			break;
+		case 53:
+			runCalculator("5");
+			break;
+		case 54:
+			runCalculator("6");
+			break;
+		case 55:
+			runCalculator("7");
+			break;
+		case 56:
+			runCalculator("8");
+			break;
+		case 57:
+			runCalculator("9");
+			break;
+		case 187:
+			runCalculator("=");
+			break;
+		case 13:
+			runCalculator("=");
+			break;
+		case 42:
+			runCalculator("*");
+			break;
+		case 95:
+			runCalculator("-");
+			break;
+		case 37:
+			runCalculator("%");
+			break;
+		case 191:
+			runCalculator("/");
+			break;
+		case 189:
+			runCalculator("-");
+			break;
+		case 190:
+			runCalculator(".");
+			break;
+		case 8:
+			runCalculator("C");
+			break;
 	}
 }
 
@@ -180,13 +265,12 @@ function resetTextSize(displayText) {
 	displayText.style.cssText = "font-size: 52px";
 }
 
-/*  This object records all the state parameters needed to carry out the 
-	tasks of the calculator. firstOperand and secondOperand are the last 
-	two operands that were operated on, so if we press the buttons 2, +,
-	3, and = in that order, 2 and 3 are our operands and + is the operation 
-	stored. Also keep track of the type of the last button pressed, since this
-	tends to effect the calculation the calculator will perform at any given stage.
-*/
+//This object records all the state parameters needed to carry out the 
+// tasks of the calculator. firstOperand and secondOperand are the last 
+// two operands that were operated on, so if we press the buttons 2, +,
+// 3, and = in that order, 2 and 3 are our operands and + is the operation 
+// stored. Also keep track of the type of the last button pressed, since this
+// tends to effect the calculation the calculator will perform at any given stage.
 function CalculatorClass(firstOperand, secondOperand, lastOperation, lastPressed) {
 	this.firstOperand = firstOperand;
 	this.secondOperand = secondOperand;
