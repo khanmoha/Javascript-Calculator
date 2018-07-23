@@ -21,15 +21,18 @@ for(let i = 0; i < buttons.length; i++){
 	buttons[i].addEventListener('click', pressButton);
 }
 
-// Evert time a keypress event is triggered, run calculator logic for that key
-// Keypress only fires when a character is pressed.
+// Evert time a keypress event is triggered, run calculator logic for that key.
+// Keypress can pick up shifted keys, unlike keydown.
 document.addEventListener('keypress', calcThruKeypress);
 
-// Keypress doesn't detect backspace.
+// Keypress doesn't pick up backspace
 document.addEventListener('keydown', (e) => {
-	if (e.keyCode === 8) {
-		runCalculator("C");
+	switch(e.keyCode){
+		case 8:
+			runCalculator("C");
+			break;
 	}
+
 });
 
 // Run calculator logic when a button is clicked on
@@ -205,32 +208,29 @@ function calcThruKeypress(e) {
 		case 57:
 			runCalculator("9");
 			break;
-		case 187:
+		case 61:
 			runCalculator("=");
 			break;
 		case 13:
 			runCalculator("=");
 			break;
-		case 42:
-			runCalculator("*");
+		case 43:
+			runCalculator("+");
 			break;
-		case 95:
+		case 45:
 			runCalculator("-");
+			break;
+		case 47:
+			runCalculator("/");
+			break;
+		case 46:
+			runCalculator(".");
+			break;
+		case 43:
+			runCalculator("+");
 			break;
 		case 37:
 			runCalculator("%");
-			break;
-		case 191:
-			runCalculator("/");
-			break;
-		case 189:
-			runCalculator("-");
-			break;
-		case 190:
-			runCalculator(".");
-			break;
-		case 8:
-			runCalculator("C");
 			break;
 	}
 }
