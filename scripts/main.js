@@ -1,57 +1,44 @@
-/*  Custom enumerated type to keep track of whether
-	the last button pressed was an operation button,
-	number/number modification, equal sign, or other. 
-*/
+// Custom enumerated type to keep track of the type of button last pressed.
 const buttons = {
 	OPERATION: '+, -, *, /', 
 	EQUAL: '=', 
-	NUM: '0,1,2,3,4,5,6,7,8,9,.,+/-,%', 
+	NUM: '0,1,2,3,4,5,6,7,8,9,.,+/-,%'
 }
 
-// Object keeps track of last two numbers that were operated 
-// on, the last operation, and the type of button that was last
-// pressed.
-
+// Object keeps track of last number operated on, last operation and last button pressed.
 let history = new CalculatorHistory("", "", "");
 let allButtons = document.querySelectorAll("button");
-
-// Every time a button is clicked on calculator, we update all our parameters
 for(let i = 0; i < allButtons.length; i++){
 	allButtons[i].addEventListener('click', pressButton);
 }
 
-// Evert time a keypress event is triggered, run calculator logic for that key.
+// Keyboard input also valid for calculator.
 // Keypress can pick up shifted keys, unlike keydown.
 document.addEventListener('keypress', calcThruKeypress);
 
-// Keypress doesn't pick up backspace
+// Keypress doesn't pick up backspace.
 document.addEventListener('keydown', (e) => {
-	switch(e.keyCode){
-		case 8:
-			runCalculator("C");
-			break;
+	if (e.keyCode === 8){
+		runCalculator("C");
 	}
-
 });
 
-// Run calculator logic when a button is clicked on
+// Run calculator logic when a button is clicked on.
 function pressButton(e) {
 	let buttonTxt = e.target.innerHTML;
 	runCalculator(buttonTxt);
 }
 
-// Update paramters of history object at the click of each button 
-// so we can keep track of what changes need to be made. Every time a 
-// button is clicked the state of our object is effectively updated
+// Update paramters of history object at the click of each button/key.
+// Depending on what was last pressed, we can interpret the press of 
+// the newest button differntly.
 function runCalculator(buttonTxt) {
-	//let buttonTxt = e.target.innerHTML;
 	let displayText = document.querySelector("#display");
 	let displayNum = Number(displayText.textContent);
 	adjustFontSize(displayText)	;
 
-	// Operation buttons trigger evaluations of calculations or 
-	// simply the recording of the operation to be evaluated once
-	// we get the next operand
+	// Pressing an operation means we need to record this operation for future evaluation,
+	// and also possibly calculating a queued operation previosuly stored. 
 	if(buttonTxt === "+" || buttonTxt === "-" || buttonTxt === "*" || buttonTxt === "/") {
 		if (!history.getOperand() || history.getLastPressed() === buttons.EQUAL) {
 			history.newOperand(displayNum);
@@ -72,17 +59,21 @@ function runCalculator(buttonTxt) {
 		displayText.textContent = "0";
 		resetTextSize(displayText);
 	}
+	// Pressing equal means we do a calculation with the saved/displayed numbers and operations.
+	// The order of operands can vary depending on whether an operand was just entered, or 
+	// if we are hitting enter again and again to keep doing the same calculation.
 	else if (buttonTxt === "=") {
 		if (history.getLastPressed() === buttons.NUM && history.getOperand() !== "") {
 			let result = performArithmetic(history.getOperation(), history.getOperand(), displayNum);
 			history.newOperand(displayNum);
 			displayText.textContent = result.toString();
+			history.newLastPressed(buttons.EQUAL);
 		}
 		else if (history.getLastPressed() === buttons.EQUAL || history.getLastPressed() === buttons.OPERATION) {
 			let result = performArithmetic(history.getOperation(), displayNum, history.getOperand());
 			displayText.textContent = result.toString();
+			history.newLastPressed(buttons.EQUAL);
 		}
-		history.newLastPressed(buttons.EQUAL);
 	}
 	else if (buttonTxt === ".") {
 		if (displayText.textContent.indexOf(".") === -1) {
@@ -101,7 +92,7 @@ function runCalculator(buttonTxt) {
 			history.newLastPressed(buttons.NUM);
 		}
 	}
-	// Update numerical display according to what was pressed just before.
+	// When pressing a numeral, we might need to append the digit or replace the display entirely.
 	else { //numbers 0-9
 		if (history.getLastPressed() === buttons.NUM) {
 			displayText.textContent += buttonTxt;
@@ -116,6 +107,7 @@ function runCalculator(buttonTxt) {
 
 // Use keypress input to carry out calculator logic.
 function calcThruKeypress(e) {
+	console.log(e.keyCode);
 	switch(e.keyCode) {
 		case 48:
 			runCalculator("0");
@@ -165,8 +157,8 @@ function calcThruKeypress(e) {
 		case 46:
 			runCalculator(".");
 			break;
-		case 43:
-			runCalculator("+");
+		case 42:
+			runCalculator("*");
 			break;
 		case 37:
 			runCalculator("%");
@@ -176,7 +168,6 @@ function calcThruKeypress(e) {
 
 // Given operation and two operands, perform the calculation
 function performArithmetic(buttonTxt, A, B) {
-	
 	switch(buttonTxt) {
 		case "+":
 			return Number(A) + Number(B);
@@ -198,17 +189,16 @@ function adjustFontSize(displayText) {
 	}
 }
 
-// Reset display text to 52px if text got resized from number overflow
+// Reset display text to 52px (text might have been resized from number overflow)
 function resetTextSize(displayText) {
 	displayText.style.cssText = "font-size: 52px";
 }
 
-//This object records all the state parameters needed to carry out the 
-// tasks of the calculator. firstOperand and secondOperand are the last 
-// two operands that were operated on, so if we press the buttons 2, +,
-// 3, and = in that order, 2 and 3 are our operands and + is the operation 
-// stored. Also keep track of the type of the last button pressed, since this
-// tends to effect the calculation the calculator will perform at any given stage.
+// This object records all the state parameters needed to carry out the 
+// tasks of the calculator. Apart from the display number, we need another 
+// number which was entered previously to perform a calculation, which is 
+// saved in savedOperand. The last operation pressed and the type of the last
+// button pressed are lastOperation and lastPressed respectively.
 function CalculatorHistory(savedOperand, lastOperation, lastPressed) {
 	this.savedOperand = savedOperand;
 	this.lastOperation = lastOperation;
