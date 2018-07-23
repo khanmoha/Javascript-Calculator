@@ -27,7 +27,6 @@ document.addEventListener('keypress', calcThruKeypress);
 
 // Keypress doesn't detect backspace.
 document.addEventListener('keydown', (e) => {
-	//console.log("keydown"+e.keyCode);
 	if (e.keyCode === 8) {
 		runCalculator("C");
 	}
@@ -175,7 +174,6 @@ function runCalculator(buttonTxt) {
 
 // Use keypress input to carry out calculator logic.
 function calcThruKeypress(e) {
-	console.log("keypress"+e.keyCode);
 	switch(e.keyCode) {
 		case 48:
 			runCalculator("0");
