@@ -13,7 +13,7 @@ const buttonEnums = {
 // on, the last operation, and the type of button that was last
 // pressed.
 
-let calcHistory = new CalculatorClass("", "", "", buttonEnums.OTHER);
+let calcHistory = new CalculatorClass("0", "", "", buttonEnums.OTHER);
 let buttons = document.querySelectorAll("button");
 
 // Every time a button is clicked on calculator, we update all our parameters
@@ -48,7 +48,6 @@ function runCalculator(buttonTxt) {
 	//let buttonTxt = e.target.innerHTML;
 	let displayText = document.querySelector("#display");
 	let displayNum = Number(displayText.textContent);
-
 	adjustFontSize(displayText)	;
 
 	// Operation buttons trigger evaluations of calculations or 
@@ -56,15 +55,19 @@ function runCalculator(buttonTxt) {
 	// we get the next operand
 	if(buttonTxt === "+" || buttonTxt === "-" || 
 		buttonTxt === "*" || buttonTxt === "/") {
-
-		if (calcHistory.getFirstO() === "") { 
-			calcHistory.newFirstO(displayNum);
+		if (calcHistory.getFirstO() === "0") { 
+			if (displayNum !== 0) {
+				calcHistory.newFirstO(displayNum);
+			}
 			calcHistory.newOperation(buttonTxt);
 			calcHistory.newLastPressed(buttonEnums.OPERATION);
 		}
 		else if (calcHistory.getSecondO() === "" && 
 			calcHistory.getLastPressed() !== buttonEnums.OPERATION) {
 			calcHistory.newSecondO(displayNum);
+			if (calcHistory.getOperation() === "") {
+				calcHistory.newOperation(buttonTxt);
+			}
 			let result = performArithmetic(calcHistory.getOperation(), 
 				calcHistory.getFirstO(), calcHistory.getSecondO());
 			displayText.textContent = result.toString();
@@ -97,9 +100,11 @@ function runCalculator(buttonTxt) {
 	// If we press equal after an operation, we must perform the 
 	// operation on the currently displayed number.
 	else if (buttonTxt === "=") {
+
 		if ((calcHistory.getLastPressed() === buttonEnums.NUM ||
 			calcHistory.getLastPressed() === buttonEnums.EQUAL) &&
 			calcHistory.getFirstO()) {
+
 			if (calcHistory.getSecondO() === "") {
 				calcHistory.newSecondO(displayNum);
 			}
